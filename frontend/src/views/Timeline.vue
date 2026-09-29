@@ -11,7 +11,7 @@ function markColor(m: any) {
 </script>
 <template>
   <h1>时间轴明细</h1>
-  <p class="sub">站点「{{ data.stop_name }}」到站分布(轴点可右移,间隔数字仍按原始到站)</p>
+  <p class="sub">站点「{{ data.stop_name }}」到站分布(轴点与间隔数字均按扣车后的生效时刻)</p>
   <div class="card">
     <div class="tl-track">
       <div v-for="m in data.marks" :key="m.trip_no" class="tl-mark"
@@ -23,7 +23,7 @@ function markColor(m: any) {
       <tbody>
         <tr v-for="m in data.marks" :key="m.trip_no">
           <td>{{ m.trip_no }}</td><td>{{ m.actual_arrive }}</td>
-          <td><span class="muted">—</span></td>
+          <td>{{ m.hold_min > 0 ? `扣 ${m.hold_min}′` : '—' }}</td>
           <td>{{ m.pct }}%</td>
         </tr>
       </tbody>

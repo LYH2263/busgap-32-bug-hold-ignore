@@ -21,8 +21,18 @@ def classify_gap(gap_min: float, planned_headway_min: float, bunch_threshold: fl
     return ("normal", f"间隔接近计划 {planned_headway_min:.1f} 分钟，保持即可。")
 
 def apply_holds(arrivals: list[dict], holds: dict[tuple[str, str], float]) -> list[dict]:
-    _ = holds
-    return [{**a} for a in arrivals]
+    """按 (班次, 站点) 的扣车分钟把到站时刻右移,得到扣完后的生效时刻。
+
+    未登记或 0 分钟与原始时刻相同;返回新字典,不改动传入的记录。
+    """
+    out: list[dict] = []
+    for a in arrivals:
+        minutes = hold_display_minutes(holds, a["trip_no"], a["stop_name"])
+        if minutes > 0:
+            out.append({**a, "actual_arrive": a["actual_arrive"] + timedelta(minutes=minutes)})
+        else:
+            out.append({**a})
+    return out
 
 def detect_bunching(arrivals: list[dict], planned_headway_min: float, bunch_threshold: float, large_threshold: float) -> list[GapEvent]:
     by_stop: dict[str, list[dict]] = {}

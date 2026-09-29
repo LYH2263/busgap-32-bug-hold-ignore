@@ -53,6 +53,7 @@ async function register(t: any) {
     })
     t.holds = updated.holds
     await refreshEvents()
+    window.dispatchEvent(new CustomEvent('busgap:holds-changed'))
   } catch (e: any) {
     holdErr.value = { ...holdErr.value, [t.id]: errText(e) }
   } finally {
@@ -69,7 +70,7 @@ function label(s: string) {
 <template>
   <h1>班次 · 间隔条带</h1>
   <p class="sub">左侧班次清单(可登记扣车),右侧串车/间隔竖直条带</p>
-  <p class="muted">业务页与检测读口未强制同参与集</p>
+  <p class="muted">间隔数字与轴点均按扣车后的生效时刻计算</p>
   <div class="bg-split">
     <aside class="bg-trip-col">
       <h2>班次列表</h2>

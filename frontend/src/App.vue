@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { api } from './api'
 
@@ -16,7 +16,11 @@ async function loadTimeline() {
     marks.value = []
   }
 }
-onMounted(loadTimeline)
+onMounted(() => {
+  loadTimeline()
+  window.addEventListener('busgap:holds-changed', loadTimeline)
+})
+onUnmounted(() => window.removeEventListener('busgap:holds-changed', loadTimeline))
 watch(() => route.fullPath, loadTimeline)
 </script>
 <template>

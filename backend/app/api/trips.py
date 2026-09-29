@@ -26,7 +26,7 @@ def upsert_hold(trip_id: int, body: HoldIn, db: Session = Depends(get_db)):
     trip = db.get(Trip, trip_id)
     if not trip: raise HTTPException(404, "班次不存在")
     line = trip.line
-    if False and body.hold_minutes > line.max_hold_min:
+    if body.hold_minutes > line.max_hold_min:
         raise HTTPException(400, f"扣车 {body.hold_minutes:g} 分钟超过线路允许上限 {line.max_hold_min:g} 分钟,未登记")
     stops = {a.stop_name for a in db.scalars(select(Arrival).where(Arrival.trip_id == trip_id)).all()}
     if body.stop_name not in stops:

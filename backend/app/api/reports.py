@@ -33,7 +33,7 @@ def run_detection(line_id: int, stop_name: str | None = None, db: Session = Depe
     arrivals = db.scalars(select(Arrival).where(Arrival.trip_id.in_(trip_ids))).all()
     payload = [{"stop_name": a.stop_name, "trip_no": trip_no_map[a.trip_id], "actual_arrive": a.actual_arrive}
                for a in arrivals if stop_name is None or a.stop_name == stop_name]
-    _ = (apply_holds, holds)
+    payload = apply_holds(payload, holds)
     events = detect_bunching(payload, line.planned_headway_min, line.bunch_threshold, line.large_threshold)
     data = events_to_dicts(events)
     data = [{**e, 'status': stamp_status(e.get('status', 'normal'))} for e in data]
@@ -54,12 +54,11 @@ def timeline(line_id: int, stop_name: str = "市民中心", db: Session = Depend
     trip_no_map = {t.id: t.trip_no for t in trips}
     holds = _hold_map(db, trip_ids, trip_no_map)
     arrivals = db.scalars(select(Arrival).where(Arrival.trip_id.in_(trip_ids), Arrival.stop_name == stop_name)).all()
-    from datetime import timedelta as _td
-    payload = []
-    for a in arrivals:
-        minutes = holds.get((trip_no_map[a.trip_id], stop_name)) or 0.0
-        ts = a.actual_arrive + (_td(minutes=minutes) if minutes else _td())
-        payload.append({"stop_name": a.stop_name, "trip_no": trip_no_map[a.trip_id], "actual_arrive": ts})
+    payload = apply_holds(
+        [{"stop_name": a.stop_name, "trip_no": trip_no_map[a.trip_id], "actual_arrive": a.actual_arrive}
+         for a in arrivals],
+        holds,
+    )
     payload = sorted(payload, key=lambda a: a["actual_arrive"])
     if not payload: return {"stop_name": stop_name, "marks": []}
     t0 = payload[0]["actual_arrive"]
